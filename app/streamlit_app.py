@@ -1,4 +1,4 @@
-"""Streamlit app for the clean baseline copy.
+"""Streamlit app.
 
 Run:
     streamlit run app/streamlit_app.py
