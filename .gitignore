@@ -1,0 +1,61 @@
+# ------------------------------------------------------------
+# System and Python cache
+# ------------------------------------------------------------
+__pycache__/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/
+.matplotlib_cache/
+nltk_data/
+
+# ------------------------------------------------------------
+# Local environment files
+# ------------------------------------------------------------
+.env
+.venv/
+venv/
+
+# ------------------------------------------------------------
+# Trained models / binary artifacts
+# ------------------------------------------------------------
+models/
+*.joblib
+*.pkl
+
+# ------------------------------------------------------------
+# Large local dataset
+# Keep the folder locally, but do not push the raw data to GitHub.
+# ------------------------------------------------------------
+data/raw/
+
+# ------------------------------------------------------------
+# Generated intermediate outputs
+# ------------------------------------------------------------
+outputs/articles/prompts/
+outputs/articles/*.json
+outputs/articles/*.csv
+outputs/clustering/
+outputs/errors/
+outputs/metrics/*.csv
+
+# ------------------------------------------------------------
+# Presentation source file
+# Keep the final PDF, but ignore the editable PowerPoint file.
+# ------------------------------------------------------------
+*.pptx
+
+# ------------------------------------------------------------
+# Final outputs to keep in GitHub
+# ------------------------------------------------------------
+!RoboReviews_Project_AI_Ironhack.pdf
+
+!outputs/
+!outputs/figures/
+!outputs/figures/*.png
+
+!outputs/articles/
+!outputs/articles/product_card_summaries.md
+!outputs/articles/RoboReviews_generated_reviews.pdf
+
+!outputs/metrics/
+!outputs/metrics/best_tuned_model_classification_report.md

@@ -1,0 +1,6 @@
+{
+  "downsampling_macro_f1": 0.6344421612847669,
+  "filtered_label_macro_f1": 0.8040701521280464,
+  "original_tuned_macro_f1": 0.8011050116410088,
+  "note": "Downsampling and filtering are compared against the tuned model from this script."
+}
