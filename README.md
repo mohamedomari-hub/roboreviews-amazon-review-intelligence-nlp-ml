@@ -13,7 +13,7 @@ The goal is to turn Amazon review data into a simple reviewer-style product reco
 ## Project Structure
 
 ```text
-amazon-review-intelligence-copy-2/
+roboreviews-amazon-review-intelligence-project/
 ├── app/
 │   └── streamlit_app.py
 ├── data/
@@ -32,6 +32,120 @@ amazon-review-intelligence-copy-2/
 ├── README.md
 └── requirements.txt
 ```
+
+## Dataset Description
+
+The project uses public Amazon product review CSV files from Datafiniti-style Amazon review datasets.
+
+The raw data is stored locally in:
+
+```text
+data/raw/
+├── 1429_1.csv
+├── Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products.csv
+└── Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv
+```
+
+The raw CSV files are not pushed to GitHub because the local `data/raw/` folder is large, around `395 MB`.
+
+### Raw File Sizes
+
+| File | Rows | Columns |
+|---|---:|---:|
+| `1429_1.csv` | 34,660 | 21 |
+| `Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products.csv` | 5,000 | 24 |
+| `Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv` | 28,332 | 24 |
+| **Combined raw data** | **67,992** | **27** |
+
+### Main Columns Used
+
+The most important columns are:
+
+| Column | Meaning | Used For |
+|---|---|---|
+| `name` | Product name | product grouping, app display, image matching |
+| `categories` | Raw product category text | baseline clustering and taxonomy checks |
+| `primaryCategories` | Higher-level product category where available | extra category context |
+| `asins` | Amazon product identifier | product identity check |
+| `imageURLs` | Product image URLs where available | Streamlit product images |
+| `reviews.rating` | Star rating from 1 to 5 | weak sentiment label and product score |
+| `reviews.title` | Review title | sentiment text input |
+| `reviews.text` | Full review text | sentiment text input and baseline clustering |
+| `reviews.numHelpful` | Helpful vote count | available metadata, not core model input |
+| `reviews.doRecommend` | Whether reviewer recommends product, where available | available metadata, not core model input |
+| `reviews.username` | Reviewer username | not used for modeling |
+
+### Missing Values And Cleaning
+
+After combining the raw files:
+
+| Field | Missing Values | Notes |
+|---|---:|---|
+| `reviews.rating` | 33 | rows without rating cannot receive weak sentiment labels |
+| `reviews.text` | 1 | rows without review text are removed for sentiment modeling |
+| `reviews.title` | 19 | missing titles are allowed; the review text is still used |
+| `name` | 6,760 | mostly from one raw file; rows can still be used for review-level sentiment but not always for product-level grouping |
+| `imageURLs` | 34,660 | images are only available in some raw files |
+
+For sentiment modeling, rows with no rating or no review text are removed.
+
+After this cleanup:
+
+```text
+67,958 review rows remain
+```
+
+### Rating Distribution
+
+The rating distribution is strongly positive:
+
+| Rating | Reviews |
+|---:|---:|
+| 1 star | 1,438 |
+| 2 stars | 1,072 |
+| 3 stars | 2,902 |
+| 4 stars | 15,397 |
+| 5 stars | 47,149 |
+
+This imbalance is why Macro F1 is more important than accuracy.
+
+### Sentiment Labels Created From Ratings
+
+The sentiment task uses rating as a weak label:
+
+```text
+1-2 stars = negative
+3 stars   = neutral
+4-5 stars = positive
+```
+
+Label counts after cleanup:
+
+| Sentiment Label | Reviews |
+|---|---:|
+| positive | 62,546 |
+| neutral | 2,902 |
+| negative | 2,510 |
+
+### Product-Level Data
+
+The combined cleaned data contains:
+
+```text
+125 unique product names
+91 unique ASIN values
+111 unique raw category strings
+```
+
+For clustering and generation, the data is aggregated from review-level rows into product-level rows. The final product-level pipeline uses one row per product with:
+
+- review count
+- average rating
+- predicted positive / neutral / negative review shares
+- common strengths
+- common complaints or issues
+- corrected taxonomy category
+- product score
 
 ## How To Run From Fresh
 
@@ -110,6 +224,20 @@ The baseline compares:
 - Naive Bayes
 - Random Forest
 - XGBoost
+
+I also tried transformer-style sentiment models:
+
+- MiniLM sentence embeddings with a classifier
+- standard BERT-style sentiment modeling
+
+These did not perform as well as the tuned TF-IDF + Linear SVM setup for this dataset. The likely reasons were:
+
+- the labels are weak labels created from star ratings, not manually annotated sentiment labels
+- the dataset is highly imbalanced toward positive reviews
+- many neutral reviews are mixed or contradictory
+- short n-gram phrases such as `not worth`, `easy to use`, and `battery life` were captured very well by TF-IDF
+
+Because of this, the final sentiment pipeline uses the simpler and more explainable TF-IDF + Linear SVM approach.
 
 ### Validation Setup
 
@@ -317,6 +445,7 @@ The improved pipeline uses:
 - normalization
 - KMeans
 - Hierarchical / Agglomerative clustering
+- Self-Organizing Map (SOM) as an additional clustering check
 
 SVD is used to compress the TF-IDF matrix and remove tiny noise. The main improvement came from better product identity features, not from SVD alone.
 
@@ -333,7 +462,7 @@ For each k it calculates:
 - silhouette score
 - elbow-style within-cluster distance
 
-Both KMeans and Hierarchical clustering are compared.
+KMeans and Hierarchical clustering are the main methods compared. SOM was also tested as a supporting method. Its results helped confirm the same general product-family separation found by KMeans and Hierarchical clustering, but KMeans / Hierarchical were kept as the main reported models because they were easier to explain and plot clearly.
 
 Recent clean run result:
 
@@ -617,10 +746,13 @@ ranked product recommendation cards
 
 ## Important Presentation Points
 
+- The final presentation was designed for a short project format: about 7 minutes for slides and about 3 minutes for the Streamlit app demo.
 - Ratings are weak labels, not perfect truth.
 - Neutral reviews are hard because many 3-star reviews are mixed.
 - Macro F1 matters because the dataset is imbalanced toward positive reviews.
 - N-grams improved sentiment because short phrases carry sentiment.
+- MiniLM and standard BERT-style sentiment trials were tested, but the simpler TF-IDF + Linear SVM model performed better and was easier to explain.
 - Review text was noisy for clustering, so canonical product identity improved separation.
+- SOM was also tested for clustering and supported the product-family pattern seen in KMeans and Hierarchical clustering.
 - Qwen was only the writing layer. The evidence came from sentiment, clustering, ratings, and review counts.
 - The Streamlit app turns the pipeline into a usable product recommendation experience.
