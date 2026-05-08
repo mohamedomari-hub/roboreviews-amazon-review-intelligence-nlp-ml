@@ -1,4 +1,4 @@
-"""Simple sentiment baseline.
+"""ML models for sentiment classification.
 
 Run:
     python src/01_sentiment_baseline.py

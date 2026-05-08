@@ -1,4 +1,4 @@
-"""Generation baseline using sentiment + clustering evidence.
+""" LLM-based generation using sentiment + clustering evidence.
 
 Run:
     python src/03_generation_baseline.py

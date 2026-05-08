@@ -1,4 +1,4 @@
-"""Simple clustering baseline.
+"""ML clustering for product categorization.
 
 Run:
     python src/02_clustering_baseline.py
