@@ -1,5 +1,9 @@
 # RoboReviews - Amazon Review Intelligence
 
+
+<img width="713" height="339" alt="Demo_roboreview" src="https://github.com/user-attachments/assets/213d776b-ae1c-4a42-8036-6e3ea5e3b777" />
+
+
 This is the Amazon review intelligence project.
 
 The goal is to turn Amazon review data into a simple reviewer-style product recommendation app. The project combines:
